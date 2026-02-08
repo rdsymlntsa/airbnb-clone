@@ -32,7 +32,7 @@ app.use(express.static(path.join(rootDir, "public")));
 app.use(errorsController.pageNotFound);
 
 const PORT = 3000;
-const DB_PATH="mongodb+srv://root:nadijaba99999@rl99999.zanoxwn.mongodb.net/airbnb?appName=rl99999";
+const DB_PATH="mongodb+srv://root:root@rl99999.zanoxwn.mongodb.net/airbnb?appName=rl99999";
 
 mongoose.connect(DB_PATH).then(()=>{
   console.log("Connected to mongodb");
