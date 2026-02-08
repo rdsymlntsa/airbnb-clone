@@ -1,0 +1,24 @@
+const path = require("path");
+const express = require("express");
+const storeRouter = require("./routes/storeRouter");
+const hostRouter = require("./routes/hostRouter");
+const rootDir = require("./utils/pathUtil");
+const errorsController = require("./controllers/errors");
+const app = express();
+const {mongoConnect} = require("./utils/databaseUtil");
+
+app.set("view engine", "ejs");
+app.set("views", "views");
+
+app.use(express.urlencoded({ extended: true }));
+app.use(storeRouter);
+app.use("/host", hostRouter);
+app.use(express.static(path.join(rootDir, "public")));
+app.use(errorsController.pageNotFound);
+
+const PORT = 3000;
+mongoConnect(() => {
+  app.listen(PORT, () => {
+    console.log(`server running on address http://localhost:${PORT}`);
+  });
+});
