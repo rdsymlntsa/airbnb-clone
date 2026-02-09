@@ -11,6 +11,7 @@ exports.getHomes = (req, res, next) => {
   });
 };
 exports.getIndex = (req, res, next) => {
+  console.log(req.session,req.session.isLoggedIn);
   Home.find().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes: registeredHomes,

@@ -1,5 +1,6 @@
 const path = require("path");
 const express = require("express");
+const session=require("express-session");
 const storeRouter = require("./routes/storeRouter");
 const hostRouter = require("./routes/hostRouter");
 const authRouter=require("./routes/authRouter")
@@ -12,9 +13,15 @@ app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: "secret123",
+  resave: false,
+  saveUninitialised: true
+}))
 app.use((req,res,next)=>{
+  req.isLoggedIn=req.session.isLoggedIn;
   // console.log("cookie middleware ",req.get('Cookie'));
-  req.isLoggedIn=req.get('Cookie')?req.get('Cookie').split('=')[1]==='true' : false;
+  //req.isLoggedIn=req.get('Cookie')?req.get('Cookie').split('=')[1]==='true' : false;
   next();
 })
 app.use(storeRouter);
