@@ -1,3 +1,4 @@
+const {check,validationResult}=require('express-validator');
 exports.getLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Login",
@@ -11,15 +12,85 @@ exports.getSignup = (req, res, next) => {
     pageTitle: "Signup",
     currentPage: "signup",
     isLoggedIn: false,
+    errors: [],
+    oldInput: {firstName: "",lastName: "",email: "",userType: ""
+    }
   });
 };
-exports.postSignup = (req, res, next) => {
-  console.log(req.body);
-  //req.session.isLoggedIn = true;
-  //res.cookie("isLoggedIn", true);
-  //req.isLoggedIn=true;
+exports.postSignup = [
+  check("firstName")
+  .trim()
+  .isLength({min: 2})
+  .withMessage("First name should be atleast 2 characters long")
+  .matches(/^[a-zA-Z\s]+$/)
+  .withMessage("First name should contain only alphabets"),
+   
+  check("lastName")
+  .matches(/^[a-zA-Z\s]*$/)
+  .withMessage("Last name should contain only alphabets"),
+
+  check("email")
+  .isEmail()
+  .withMessage("Please enter a valid email")
+  .normalizeEmail(),
+
+  check("password")
+  .isLength({min: 8})
+  .withMessage("Password should be atleast 8 characters long")
+  .matches(/[A-Z]/)
+  .withMessage("Password should contain atleast one uppercase letter")
+  .matches(/[a-z]/)
+  .withMessage("Password should contain atleast one lowercase character")
+  .matches(/[0-9]/)
+  .withMessage("Password should contain atleast one number")
+  .matches(/[!@#$%^&*(),.<>?:"{}|]/)
+  .withMessage("Password should contain atleast one special character")
+  .trim(),
+
+  check("confirmPassword")
+  .trim()
+  .custom((value,{req})=>{
+    if(value!=req.body.password){
+      throw new Error("Passwords do not match");
+    }
+    return true;
+  }),
+
+  check("userType")
+  .notEmpty()
+  .withMessage("Please select a user type")
+  .isIn(['guest','host'])
+  .withMessage("Invalid user type"),
+
+  check("terms")
+  .notEmpty()
+  .withMessage("Please accept the terms and conditions")
+  .custom((value,{req})=>{
+    if(value!=='on'){
+      throw new Error("Please accept the terms and conditions");
+    }
+    return true;
+  })
+  ,
+  (req, res, next) => {
+ const {firstName,lastName,email,password,userType}=req.body;
+ const errors=validationResult(req);
+if(!errors.isEmpty()){
+  return res.status(422).render("auth/signup",{
+    pageTitle: "Sign Up",
+    currentPage: "signup",
+    isLoggedIn: false,
+    errors: errors.array().map(err => err.msg),
+    oldInput: {
+      firstName,lastName,email,userType
+    }
+  })
+}
+
+
+
   res.redirect("/login");
-};
+}];
 
 exports.postLogin = (req, res, next) => {
   console.log(req.body);
