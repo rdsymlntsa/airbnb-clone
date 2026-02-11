@@ -1,10 +1,13 @@
 const {check,validationResult}=require('express-validator');
 const User=require('../models/user');
+const bcrypt=require('bcryptjs')
 exports.getLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Login",
     currentPage: "login",
     isLoggedIn: false,
+    errors: [],
+    oldInput: {email: ""}
   });
 };
 
@@ -88,15 +91,20 @@ if(!errors.isEmpty()){
   })
 }
 
-const user=new User({firstName,lastName,email,password,userType})
-user.save().then(()=>{
+bcrypt.hash(password,12).then(hashedPassword => {
+  const user=new User({firstName,lastName,email,
+    password: hashedPassword,userType
+  });
+  return user.save();
+})
+.then(()=>{
   res.redirect("/login");
 }).catch(err => {
   return res.status(422).render("auth/signup",{
     pageTitle: "Sign Up",
     currentPage: "signup",
     isLoggedIn: false,
-    errors: [err.msg],
+    errors: [err.message],
     oldInput: {
       firstName,lastName,email,userType
     }
@@ -105,12 +113,44 @@ user.save().then(()=>{
 
 }];
 
-exports.postLogin = (req, res, next) => {
-  console.log(req.body);
+exports.postLogin = async (req, res, next) => {
+  const {email,password}=req.body;
+  const user=await User.findOne({email});
+  if(!user){
+    return res.status(422).render("auth/login",{
+      pageTitle: "Login",
+      isLoggedIn: false,
+      currentPage: "login",
+      errors: ["User does not exist"],
+      oldInput: {email}
+    })
+  }
+  const isMatch=await bcrypt.compare(password,user.password);
+  if(!isMatch){
+    return res.status(422).render("auth/login",{
+      pageTitle: "Login",
+      isLoggedIn: false,
+      currentPage: "login",
+      errors: ["Incorrect password"],
+      oldInput: {email}
+    })
+  }
   req.session.isLoggedIn = true;
-  //res.cookie("isLoggedIn", true);
-  //req.isLoggedIn=true;
-  res.redirect("/");
+  //req.session.user=user;
+  req.session.user={
+    _id: user._id.toString(),
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    userType: user.userType
+  }
+  //await req.session.save();
+  req.session.save(err => {
+    if(err) console.log("Error while saving session",err);
+    res.redirect("/");
+  })
+  //res.redirect("/");
+  //console.log("After logged in: ",req.session,req.session.isLoggedIn);
 };
 
 exports.postLogout = (req, res, next) => {

@@ -15,23 +15,48 @@ app.set("view engine", "ejs");
 app.set("views", "views");
 const store=new MongoDBStore({
   uri: DB_PATH,
-  connection: 'sessions'
+  collection: 'sessions'
 })
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
   secret: "secret123",
   resave: false,
-  saveUninitialised: true,
+  saveUninitialized: true,
   store: store
 }))
+// app.use(session({
+//   secret: "secret123",
+//   resave: false,
+//   saveUninitialized: false,
+//   store: store,
+//   cookie: {
+//     maxAge: 1000 * 60 * 60, // 1 hour
+//     httpOnly: true,
+//     secure: false, // must be false for localhost HTTP
+//     sameSite: 'lax' // allows the cookie to be sent on redirect
+//   }
+// }));
+
+////////////////////////////////////////////////////////////////
 app.use((req,res,next)=>{
   req.isLoggedIn=req.session.isLoggedIn;
+  //  res.locals.isLoggedIn = req.session.isLoggedIn;
+  // res.locals.user = req.session.user;
   // console.log("cookie middleware ",req.get('Cookie'));
   //req.isLoggedIn=req.get('Cookie')?req.get('Cookie').split('=')[1]==='true' : false;
   next();
 })
-app.use(storeRouter);
+// app.use((req, res, next) => {
+//   console.log("Session in middleware: ", req.session);
+//   res.locals.isLoggedIn = req.session.isLoggedIn || false;
+//   res.locals.user = req.session.user || null;
+//   next();
+// });
+
+
 app.use(authRouter);
+app.use(storeRouter);
+
 app.use("/host",(req,res,next)=>{
   if(req.isLoggedIn){
     next();
