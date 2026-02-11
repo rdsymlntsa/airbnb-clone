@@ -1,5 +1,5 @@
 const mongoose=require('mongoose');
-const favourite=require('./favourite');
+// const favourite=require('./favourite');
 const homeSchema=mongoose.Schema({
   houseName: {type: String , required: true},
   price: {type: Number, required: true},
@@ -8,10 +8,10 @@ const homeSchema=mongoose.Schema({
   photoUrl: String,
   description: String
 });
-homeSchema.pre('findOneAndDelete',async function(next){
-  const homeId=this.getQuery()._id;
-  await favourite.deleteMany({houseId: homeId});
-})
+// homeSchema.pre('findOneAndDelete',async function(next){
+//   const homeId=this.getQuery()._id;
+//   await favourite.deleteMany({houseId: homeId});
+// })
 module.exports=mongoose.model('Home',homeSchema);
 
 
